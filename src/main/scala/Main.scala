@@ -8,6 +8,7 @@ import javax.jcr.Node
 import org.apache.jackrabbit.oak._
 import org.apache.jackrabbit.oak.jcr._
 import org.apache.jackrabbit.oak.jcr.session._
+import scala.collection.JavaConverters._
 
 object Main extends App with LazyLogging {
   logger.info("Creating new repository")
@@ -22,6 +23,8 @@ object Main extends App with LazyLogging {
   
   logger.info((getChart(root, "chart4") | "No chart found called 'chart4'").toString())
   logger.info((getChart(root, "chart13") | "No chart found called 'chart13'").toString())
+  
+  logger.info(getChartNames(root).toString())
   
   def createChart(node: Node, chart: Chart) {
     if (node.hasNode(chart.name)) {
@@ -40,12 +43,35 @@ object Main extends App with LazyLogging {
     }    
     session.save()
   }
-  
-  def getChart(node: Node, name: String): (String \/ Chart) = {
-    if (node.hasNode(name)) {
-      \/-(ChartSerializer.read(node.getNode(name)))
+
+  def findChart(root: Node, name: String): (String \/ Node) = {
+    if (root.hasNode(name)) {
+      \/-(root.getNode(name))
     } else {
       -\/("Could not find chart named '" + name + "'")
+    }    
+  }
+
+  def getChart(node: Node): (String \/ Chart) = {
+    \/-(ChartSerializer.read(node))
+  }
+
+  def getChart(root: Node, name: String): (String \/ Chart) = {
+    findChart(root, name) match {
+      case \/-(n: Node) => \/-(ChartSerializer.read(n))
+      case -\/(s: String) => -\/(s)
+    }
+  }  
+  
+  def getCharts(node: Node): (String \/ Seq[Chart]) = {
+    node.getNodes().asScala.toList.map {
+      case n: Node => getChart(n)
+    }.sequenceU
+  }
+  
+  def getChartNames(node: Node) = {
+    node.getNodes().asScala.toList.map {
+      case n: Node => n.getName()
     }
   }
 }
