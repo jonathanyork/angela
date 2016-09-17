@@ -23,9 +23,8 @@ object Main extends App with LazyLogging {
   logger.info((getChart(root, "chart4") | "No chart found called 'chart4'").toString())
   logger.info((getChart(root, "chart13") | "No chart found called 'chart13'").toString())
   
-//  logger.info(getChartNames(root).toString())
+  logger.info(getChartNames(root).toString())
   logger.info((getCharts(root) | "Error getting all the charts").toString())
-//  logger.info(getCharts(root).toString())
   
   def createChart(node: Node, chart: Chart) {
     if (node.hasNode(chart.name)) {
