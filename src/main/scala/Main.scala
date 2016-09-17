@@ -2,7 +2,7 @@ package com.bigdlittled.angela
 
 import scalaz._
 import Scalaz._
-import com.typesafe.scalalogging._
+import com.typesafe.scalalogging.LazyLogging
 import javax.jcr.SimpleCredentials
 import javax.jcr.Node
 import org.apache.jackrabbit.oak._
@@ -19,60 +19,61 @@ object Main extends App with LazyLogging {
   val root = session.getRootNode();
 
   populateRepository(root)
-  populateRepository(root)
   
   logger.info((getChart(root, "chart4") | "No chart found called 'chart4'").toString())
   logger.info((getChart(root, "chart13") | "No chart found called 'chart13'").toString())
   
-  logger.info(getChartNames(root).toString())
+//  logger.info(getChartNames(root).toString())
   logger.info((getCharts(root) | "Error getting all the charts").toString())
+//  logger.info(getCharts(root).toString())
   
   def createChart(node: Node, chart: Chart) {
     if (node.hasNode(chart.name)) {
       logger.info("Updating chart named '" + chart.name + "'")
-      val existing = node.getNode(chart.name)
-      ChartSerializer.write(existing, chart)
+      ChartSerializer.write(node.getNode(chart.name), chart)
     } else {
       logger.info("Creating chart named '" + chart.name + "'")
-      node.addNode(chart.name)
+      ChartSerializer.write(node.addNode(chart.name), chart)
     }
   }
 
-  def populateRepository(root: Node) = {
+  def populateRepository(node: Node) = {
     1 to 10 foreach { i =>
-      createChart(root, new Chart("chart" + i, "something", "12"))
+      createChart(node, new Chart("chart" + i, "something", i.toString()))
     }    
     session.save()
   }
 
-  def findChart(root: Node, name: String): (String \/ Node) = {
-    if (root.hasNode(name)) {
-      \/-(root.getNode(name))
+  def findChart(node: Node, name: String): (String \/ Node) = {
+    if (node.hasNode(name)) {
+      \/-(node.getNode(name))
     } else {
       -\/("Could not find chart named '" + name + "'")
     }    
   }
 
   def getChart(node: Node): (String \/ Chart) = {
+    logger.info("Found node now getting: " + node.toString())
     ChartSerializer.read(node)
   }
 
-  def getChart(root: Node, name: String): (String \/ Chart) = {
-    findChart(root, name) match {
+  def getChart(node: Node, name: String): (String \/ Chart) = {
+    findChart(node, name) match {
       case \/-(n: Node) => ChartSerializer.read(n)
       case -\/(s: String) => -\/(s)
     }
   }  
   
   def getCharts(node: Node): (String \/ Seq[Chart]) = {
-    node.getNodes().asScala.toList.map {
+    node.getNodes("chart*").asScala.toList.map {
       case n: Node => getChart(n)
     }.sequenceU
   }
   
-  def getChartNames(node: Node) = {
-    node.getNodes().asScala.toList.map {
-      case n: Node => n.getName()
-    }
+  def getChartNames(node: Node): (String \/ Seq[String]) = {
+    node.getNodes("chart*").asScala.toList.map {
+      case n: Node => \/-(n.getName())
+      case _ => -\/("Can't get name")
+    } sequenceU
   }
 }
