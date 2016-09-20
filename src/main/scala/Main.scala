@@ -8,12 +8,18 @@ import javax.jcr.Node
 import org.apache.jackrabbit.oak._
 import org.apache.jackrabbit.oak.jcr._
 import org.apache.jackrabbit.oak.jcr.session._
+import org.apache.jackrabbit.oak.plugins.document._
 import scala.collection.JavaConverters._
+import org.mongodb.scala._
 
 object Main extends App with LazyLogging {
   logger.info("Creating new repository")
 
-  val repository = new Jcr(new Oak()).createRepository();
+  val database = MongoClient("127.0.0.1:27017").getDatabase("oak")
+  val nodestore = new DocumentMK.Builder().setMongoDB(database).getNodeStore()
+  val repository = new Jcr(new Oak(nodestore)).createRepository()
+
+//  val repository = new Jcr(new Oak()).createRepository();
 
   val session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
   val root = session.getRootNode();
