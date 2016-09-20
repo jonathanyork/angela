@@ -11,6 +11,7 @@ import org.apache.jackrabbit.oak.jcr.session._
 import org.apache.jackrabbit.oak.plugins.document._
 import scala.collection.JavaConverters._
 import org.mongodb.scala._
+import com.mongodb.DB
 
 object Main extends App with LazyLogging {
   logger.info("Creating new repository")
