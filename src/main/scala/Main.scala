@@ -10,7 +10,6 @@ import org.apache.jackrabbit.oak.jcr._
 import org.apache.jackrabbit.oak.jcr.session._
 import org.apache.jackrabbit.oak.plugins.document._
 import scala.collection.JavaConverters._
-//import org.mongodb.scala._
 import com.mongodb._
 
 object Main extends App with LazyLogging {
@@ -20,8 +19,6 @@ object Main extends App with LazyLogging {
   val nodestore = new DocumentMK.Builder().setMongoDB(database).getNodeStore()
   val repository = new Jcr(new Oak(nodestore)).createRepository()
 
-//  val repository = new Jcr(new Oak()).createRepository();
-
   val session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
   val root = session.getRootNode();
 
@@ -30,7 +27,7 @@ object Main extends App with LazyLogging {
   logger.info((getChart(root, "chart4") | "No chart found called 'chart4'").toString())
   logger.info((getChart(root, "chart13") | "No chart found called 'chart13'").toString())
   
-  logger.info(getChartNames(root).toString())
+  logger.info((getChartNames(root) | "Unable to get chart names").toString())
   logger.info((getCharts(root) | "Error getting all the charts").toString())
   
   def createChart(node: Node, chart: Chart) {

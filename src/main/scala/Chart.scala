@@ -10,7 +10,7 @@ case class Chart(name: String, data: String, size: String)
 
 object ChartSerializer extends LazyLogging {
   def read(node: Node): (String \/ Chart) = {
-  logger.info("Reading node: " + node.toString())
+  logger.debug("Reading node: " + node.toString())
     for {
       name <- getProperty(node, "name") \/> "No name property"
       data <- getProperty(node, "data") \/> "No data property"
@@ -19,7 +19,7 @@ object ChartSerializer extends LazyLogging {
   }
 
   def write(node: Node, chart: Chart) = {
-    logger.info("Writing chart '" + chart.toString() + "' to node " + node.toString())
+    logger.debug("Writing chart '" + chart.toString() + "' to node " + node.toString())
     node.setProperty("name", chart.name)
     node.setProperty("data", chart.data)
     node.setProperty("size", chart.size)
